@@ -7,4 +7,9 @@ torch
 torchvision
 torchtext
 kaggle
+xgboost
 statsmodels
+reverse_geocoder
+ipywidgets 
+tqdm
+pycountry
