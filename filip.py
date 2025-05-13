@@ -49,10 +49,8 @@ full_data['transactions_per_user'] = full_data.groupby('user_id')['is_fraud'].tr
 full_data['fraud_ratio_per_merchant'] = full_data['fraud_transactions_per_merchant'] / full_data['transactions_per_merchant']
 full_data['fraud_ratio_per_user'] = full_data['fraud_transactions_per_user'] / full_data['transactions_per_user']
 
-# Drop intermediates
 full_data.drop(columns=['fraud_transactions_per_user', 'fraud_transactions_per_merchant'], inplace=True)
 
-# Time-based features
 full_data['timestamp'] = pd.to_datetime(full_data['timestamp'])
 full_data['signup_date'] = pd.to_datetime(full_data['signup_date'])
 
@@ -60,16 +58,10 @@ full_data['hour'] = full_data['timestamp'].dt.hour
 full_data['day_of_week'] = full_data['timestamp'].dt.dayofweek
 full_data['days_since_signup'] = (full_data['timestamp'] - full_data['signup_date']).dt.days
 
-# Amount ratios
 user_avg = full_data.groupby('user_id')['amount'].transform('mean')
 full_data['amount_to_user_avg'] = full_data['amount'] / (user_avg + 1e-5)
 
-# Sort before rolling features
 full_data = full_data.sort_values(['user_id', 'timestamp'])
-
-# -----------------------------
-# 5. Rolling Transaction Count (last 7 days)
-# -----------------------------
 
 def rolling_txn_count(df):
     df = df.set_index('timestamp')

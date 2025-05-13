@@ -4,6 +4,29 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+USERS_PATH = '../../data/users.csv'
+MERCHANTS_PATH = '../../data/merchants.csv'
+TRANSACTIONS_PATH = '../../data/transactions.json'
+
+
+def get_merged_dataframes() -> pd.DataFrame:
+    users = pd.read_csv(USERS_PATH) 
+    users['user_country'] = users['country']
+    users.drop(columns=['country'], inplace=True)
+    # users = users.rename(columns={'country': 'user_country'})
+
+    merchants = pd.read_csv(MERCHANTS_PATH)
+    # merchants = merchants.rename(columns={'country': 'merchant_country'})
+    merchants['merchant_country'] = merchants['country']
+    merchants.drop(columns=['country'], inplace=True)
+
+    transactions = pd.read_json(TRANSACTIONS_PATH, lines=True)
+
+    return (
+        transactions
+        .merge(users, on='user_id', how='left')
+        .merge(merchants, on='merchant_id', how='left')
+    )
 
 def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description") -> None | pd.DataFrame:
     """
