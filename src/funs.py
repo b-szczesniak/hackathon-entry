@@ -3,7 +3,10 @@ import scipy.stats as stats
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.metrics import (f1_score, precision_score, recall_score, confusion_matrix)
+from sklearn.metrics import (
+    f1_score, precision_score, recall_score, confusion_matrix,
+    roc_curve, auc,
+    )
 
 USERS_PATH = '../../data/users.csv'
 MERCHANTS_PATH = '../../data/merchants.csv'
@@ -68,6 +71,22 @@ def plot_confusion_matrix(y_true, y_pred):
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
     plt.title('Confusion Matrix')
+    plt.tight_layout()
+    plt.show()
+
+def plot_roc(y_test, y_pred_prob):
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+    roc_auc = auc(fpr, tpr)
+
+    plt.figure(figsize=(7, 4))
+    plt.plot(fpr, tpr, color='blue', label=f'ROC curve (area = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='red', linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc='lower right')
     plt.tight_layout()
     plt.show()
 
