@@ -1,13 +1,13 @@
 # Zadanie wstępne do Mastercard Fraud Detection Hackathon
 
-# Aby zacząć utwórz środowisko witrtualne i pobierz requirements.txt
+### Aby zacząć utwórz środowisko witrtualne i pobierz requirements.txt
 ```bash
 conda create -n hackathon python=3.10
 conda activate hackathon
 pip install -r requirements.txt
 ```
 
-# Aby pobrać dane z kaggle trzeba utworzyć własny klucz API Kaggle
+### Aby pobrać dane z kaggle trzeba utworzyć własny klucz API Kaggle
 
 Wejdź na ustawienie profilu na stronie Kaggle
 Kliknij "Utwórz nowy API Token"
