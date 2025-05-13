@@ -9,9 +9,9 @@ pip install -r requirements.txt
 
 # Aby pobrać dane z kaggle trzeba utworzyć własny klucz API Kaggle
 
-## Wejdź na ustawienie profilu na stronie Kaggle
-## Kliknij "Utwórz nowy API Token"
-## Utwórz folder ".kaggle" w katalogu domowym i przenieś tam pobrany plik "kaggle.json"
+Wejdź na ustawienie profilu na stronie Kaggle
+Kliknij "Utwórz nowy API Token"
+Utwórz folder ".kaggle" w katalogu domowym i przenieś tam pobrany plik "kaggle.json"
 
 ```bash
 mkdir ~/.kaggle
