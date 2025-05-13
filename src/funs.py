@@ -3,6 +3,7 @@ import scipy.stats as stats
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import (f1_score, precision_score, recall_score, confusion_matrix)
 
 USERS_PATH = '../../data/users.csv'
 MERCHANTS_PATH = '../../data/merchants.csv'
@@ -27,6 +28,48 @@ def get_merged_dataframes() -> pd.DataFrame:
         .merge(users, on='user_id', how='left')
         .merge(merchants, on='merchant_id', how='left')
     )
+
+
+def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=False):
+    best_score = -1
+    best_threshold = 0.5
+    thresholds = np.arange(0.0, 1.01, step)
+
+    for threshold in thresholds:
+        y_pred = (y_pred_prob >= threshold).astype(int)
+
+        if metric == 'f1':
+            score = f1_score(y_true, y_pred)
+        elif metric == 'precision':
+            score = precision_score(y_true, y_pred)
+        elif metric == 'recall':
+            score = recall_score(y_true, y_pred)
+        elif metric == 'balanced':
+            precision = precision_score(y_true, y_pred)
+            recall = recall_score(y_true, y_pred)
+            score = 2 * (precision * recall) / (precision + recall + 1e-9)
+        else:
+            raise ValueError("Invalid metric. Choose from 'f1', 'precision', 'recall', 'balanced'.")
+
+        if verbose:
+            print(f"Threshold: {threshold:.2f} | {metric}: {score:.4f}")
+
+        if score > best_score:
+            best_score = score
+            best_threshold = threshold
+
+    return best_threshold, best_score
+
+def plot_confusion_matrix(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+                xticklabels=['Not Fraud', 'Fraud'], yticklabels=['Not Fraud', 'Fraud'])
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.title('Confusion Matrix')
+    plt.tight_layout()
+    plt.show()
 
 def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description") -> None | pd.DataFrame:
     """
