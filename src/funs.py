@@ -67,7 +67,7 @@ def anova_test(df: pd.DataFrame, column: str, target: str) -> None:
     and the alternative hypothesis is that there is a significant association between them.\n
     https://en.wikipedia.org/wiki/Analysis_of_variance\n
     :param df: Pandas DataFrame
-    :param column: Column name to calculate the correlation for
+    :param column: Column name to calculate the ANOVA test for
     :param target: Target column
     :return: None
     """

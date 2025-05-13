@@ -6,7 +6,7 @@ api = KaggleApi()
 api.authenticate()
 
 competition_name = 'sgh-x-mastercard-hackathon-may-2025'
-download_path = './data/'
+download_path = '../data/'
 
 os.makedirs(download_path, exist_ok=True)
 
