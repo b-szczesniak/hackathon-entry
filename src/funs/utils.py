@@ -7,29 +7,33 @@ from sklearn.metrics import (
     f1_score, precision_score, recall_score
     )
 
-USERS_PATH = '../../data/users.csv'
-MERCHANTS_PATH = '../../data/merchants.csv'
-TRANSACTIONS_PATH = '../../data/transactions.json'
+from country_decoding import add_country_from_coordinates
 
+USERS_PATH = '../../data/preprocessed/users.csv'
+MERCHANTS_PATH = '../../data/preprocessed/merchants.csv'
+TRANSACTIONS_PATH = '../../data/preprocessed/transactions.json'
 
 def get_merged_dataframes() -> pd.DataFrame:
     users = pd.read_csv(USERS_PATH) 
     users['user_country'] = users['country']
     users.drop(columns=['country'], inplace=True)
-    # users = users.rename(columns={'country': 'user_country'})
 
     merchants = pd.read_csv(MERCHANTS_PATH)
-    # merchants = merchants.rename(columns={'country': 'merchant_country'})
     merchants['merchant_country'] = merchants['country']
     merchants.drop(columns=['country'], inplace=True)
 
     transactions = pd.read_json(TRANSACTIONS_PATH, lines=True)
 
-    return (
+    merged = (
         transactions
         .merge(users, on='user_id', how='left')
         .merge(merchants, on='merchant_id', how='left')
     )
+
+    # Add country information from coordinates
+    merged = add_country_from_coordinates(merged)
+
+    return merged
 
 
 def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=False):
@@ -107,7 +111,7 @@ def spearman_correlation(df: pd.DataFrame, column: str, target: str) -> None:
     print(f"\n{column} - Spearman correlation test:")
     print(f"Correlation coefficient: {corr:.4f}")
     print(f"p-value: {p_value:.4f}")
-    print(f"Statistically significant: {'Yes' if p_value < 0.05 else 'No'}")
+    print(f"Statistically significant: {'Yes' if p_value < 0.05 else 'No'}\n")
     
     plt.figure(figsize=(10, 6))
     ax = sns.regplot(x=column, y=target, data=df_valid, scatter_kws={'alpha':0.3}, line_kws={'color':'red'})
@@ -136,7 +140,7 @@ def anova_test(df: pd.DataFrame, column: str, target: str) -> None:
     print(f"\n{column} - ANOVA test:")
     print(f"F-statistic: {f_stat:.4f}")
     print(f"p-value: {p_value:.4f}")
-    print(f"Statistically significant: {'Yes' if p_value < 0.05 else 'No'}")
+    print(f"Statistically significant: {'Yes' if p_value < 0.05 else 'No'}\n")
     
     plt.figure(figsize=(10, 6))
     ax = sns.boxplot(x=column, y=target, data=df_valid)
@@ -157,4 +161,3 @@ def anova_test(df: pd.DataFrame, column: str, target: str) -> None:
         tukey = stats.tukey_hsd(df_valid[target], df_valid[column], alpha=0.05)
         print("\nTukey HSD post-hoc test:")
         print(tukey)
-

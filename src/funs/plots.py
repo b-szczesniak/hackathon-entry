@@ -26,7 +26,7 @@ def plot_groupby(df: pd.DataFrame, column: str, target: str, agg_func: str = 'me
     plt.tight_layout()
     plt.show()
 
-def plot_correlation_matrix(df: pd.DataFrame, target: str) -> None:
+def plot_correlation_matrix(df: pd.DataFrame, target: str, threshold_target: float) -> None:
     """
     Plotting function for correlation matrix\n
     :param df: Pandas DataFrame
@@ -39,7 +39,6 @@ def plot_correlation_matrix(df: pd.DataFrame, target: str) -> None:
     corr_matrix = numeric_data.corr()
 
     threshold_general = 1       # general correlation threshold
-    threshold_target = 0.02     # correlation with target threshold
 
     # Remove diagonal self-correlation
     corr_no_diag = corr_matrix.copy()
