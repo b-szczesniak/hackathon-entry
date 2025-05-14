@@ -66,7 +66,7 @@ def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=Fal
 
     return best_threshold, best_score
 
-def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description") -> None | pd.DataFrame:
+def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description", treshold: int = 0.05) -> dict | None | pd.DataFrame:
     """
     ## Variable Statistical Test of Independence
     ### The null hypothesis is that there is no association between the two variables,
@@ -86,15 +86,19 @@ def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: s
     chi2, pval, dof, expected = stats.chi2_contingency(table)
 
     if type == "description":
-        print("Chi-square statistic: ", chi2)
-        print("p-value: ", pval)
-        print("Degrees of freedom: ", dof)
-        print("Expected frequencies: ")
-        print(pd.DataFrame(expected, index=table.index, columns=table.columns))
+        if pval <= treshold:
+            return {
+                "column": factor_col,
+                "chi2": chi2,
+                "p_value": pval,
+                "dof": dof,
+                "expected": pd.DataFrame(expected, index=table.index, columns=table.columns)
+            }
+        return
     elif type == "table":
         return stats.chi2_contingency(table)[3]
 
-def spearman_correlation(df: pd.DataFrame, column: str, target: str) -> None:
+def spearman_correlation(df: pd.DataFrame, column: str, target: str) -> dict | None:
     """
     ## Spearman's rank correlation coefficient
     ### The null hypothesis is that there is no association between the two variables,
@@ -107,21 +111,21 @@ def spearman_correlation(df: pd.DataFrame, column: str, target: str) -> None:
     """
     df_valid = df.dropna(subset=[column])
 
-    corr, p_value = stats.spearmanr(df_valid[column], df_valid[target])
-    print(f"\n{column} - Spearman correlation test:")
-    print(f"Correlation coefficient: {corr:.4f}")
-    print(f"p-value: {p_value:.4f}")
-    print(f"Statistically significant: {'Yes' if p_value < 0.05 else 'No'}\n")
-    
-    plt.figure(figsize=(10, 6))
-    ax = sns.regplot(x=column, y=target, data=df_valid, scatter_kws={'alpha':0.3}, line_kws={'color':'red'})
-    ax.set_title(f'Relationship between {column} and Fraud Count (r={corr:.4f}, p={p_value:.4f})')
-    ax.set_xlabel(column)
-    ax.set_ylabel('Fraud Count')
-    plt.tight_layout()
-    plt.show()
+    # avoid ConstantInputWarning
+    if df_valid[column].nunique() < 2 or df_valid[target].nunique() < 2:
+        return
 
-def anova_test(df: pd.DataFrame, column: str, target: str) -> None:
+    corr, p_value = stats.spearmanr(df_valid[column], df_valid[target])
+    if p_value < 0.05:
+        return {
+            "column": column,
+            "correlation_coefficient": corr,
+            "p_value": p_value,
+            "significant": True
+        }
+    return
+
+def anova_test(df: pd.DataFrame, column: str, target: str) -> dict | None:
     """
     ## ANOVA test
     ### The null hypothesis is that there is no association between the two variables,
@@ -135,29 +139,16 @@ def anova_test(df: pd.DataFrame, column: str, target: str) -> None:
     df_valid = df.dropna(subset=[column])
 
     groups = [group[target].values for name, group in df_valid.groupby(column)]
+    if len(groups) < 2:
+        return
     f_stat, p_value = stats.f_oneway(*groups)
-    
-    print(f"\n{column} - ANOVA test:")
-    print(f"F-statistic: {f_stat:.4f}")
-    print(f"p-value: {p_value:.4f}")
-    print(f"Statistically significant: {'Yes' if p_value < 0.05 else 'No'}\n")
-    
-    plt.figure(figsize=(10, 6))
-    ax = sns.boxplot(x=column, y=target, data=df_valid)
-    ax.set_title(f'ANOVA Test: {column} vs {target} (F={f_stat:.4f}, p={p_value:.4f})')
-    ax.set_xlabel(column)
-    ax.set_ylabel(target)
 
-    medians = df_valid.groupby(column)[target].median().values
-    for i, median in enumerate(medians):
-        ax.text(i, median + 0.1, f'Median: {median:.1f}', ha='center')
-     
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
-     
-    # If significant, perform post-hoc Tukey test
-    if p_value < 0.05 and len(groups) > 2:
-        tukey = stats.tukey_hsd(df_valid[target], df_valid[column], alpha=0.05)
-        print("\nTukey HSD post-hoc test:")
-        print(tukey)
+    if p_value < 0.05:
+        return {
+            "column": column,
+            "f_statistic": f_stat,
+            "p_value": p_value,
+            "significant": p_value < 0.05
+        }
+    return
+    
