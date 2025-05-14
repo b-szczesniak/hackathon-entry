@@ -4,8 +4,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import (
-    f1_score, precision_score, recall_score, confusion_matrix,
-    roc_curve, auc,
+    f1_score, precision_score, recall_score
     )
 
 USERS_PATH = '../../data/users.csv'
@@ -62,33 +61,6 @@ def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=Fal
             best_threshold = threshold
 
     return best_threshold, best_score
-
-def plot_confusion_matrix(y_true, y_pred):
-    cm = confusion_matrix(y_true, y_pred)
-    plt.figure(figsize=(6, 4))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
-                xticklabels=['Not Fraud', 'Fraud'], yticklabels=['Not Fraud', 'Fraud'])
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
-    plt.title('Confusion Matrix')
-    plt.tight_layout()
-    plt.show()
-
-def plot_roc(y_test, y_pred_prob):
-    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
-    roc_auc = auc(fpr, tpr)
-
-    plt.figure(figsize=(7, 4))
-    plt.plot(fpr, tpr, color='blue', label=f'ROC curve (area = {roc_auc:.2f})')
-    plt.plot([0, 1], [0, 1], color='red', linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic')
-    plt.legend(loc='lower right')
-    plt.tight_layout()
-    plt.show()
 
 def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description") -> None | pd.DataFrame:
     """
@@ -186,20 +158,3 @@ def anova_test(df: pd.DataFrame, column: str, target: str) -> None:
         print("\nTukey HSD post-hoc test:")
         print(tukey)
 
-def plot_groupby(df: pd.DataFrame, column: str, target: str, agg_func: str = 'mean') -> None:
-    """
-    Plotting function for grouped data\n
-    :param df: Pandas DataFrame
-    :param column: Column to group by
-    :param target: Target column to plot
-    :param agg_func: Aggregation function (default: 'mean')
-    :return: None
-    """
-    plt.figure(figsize=(10, 6))
-    data = df.groupby(column)[target].agg(agg_func).reset_index()
-    ax = sns.boxplot(x=column, y=target, data=data)
-    ax.set_title(f'Boxplot of {target} by {column}')
-    ax.set_xlabel(column)
-    ax.set_ylabel(target)
-    plt.tight_layout()
-    plt.show()
