@@ -7,7 +7,7 @@ from sklearn.metrics import (
     f1_score, precision_score, recall_score
     )
 
-from country_decoding import add_country_from_coordinates
+from funs.country_decoding import add_country_from_coordinates
 
 USERS_PATH = '../../data/preprocessed/users.csv'
 MERCHANTS_PATH = '../../data/preprocessed/merchants.csv'
@@ -36,7 +36,22 @@ def get_merged_dataframes() -> pd.DataFrame:
     return merged
 
 
-def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=False):
+def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=False) -> tuple[float, float]:
+    """
+    #### Find the best threshold for binary classification
+    This function finds the best threshold for binary classification based on the specified metric.\n
+    The metric can be 'f1', 'precision', 'recall', or 'balanced'.\n
+    The function iterates through thresholds from 0 to 1 in steps of the specified size and calculates the score for each threshold.\n
+    The best threshold is the one that maximizes the score.\n
+    Args:
+        y_true (array-like): True binary labels
+        y_pred_prob (array-like): Predicted probabilities
+        metric (str): Metric to optimize ('f1', 'precision', 'recall', 'balanced')
+        step (float): Step size for threshold iteration
+        verbose (bool): If True, print the scores for each threshold
+    Returns:
+        tuple: Best threshold and corresponding score
+    """
     best_score = -1
     best_threshold = 0.5
     thresholds = np.arange(0.0, 1.01, step)
@@ -66,18 +81,24 @@ def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=Fal
 
     return best_threshold, best_score
 
-def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description", treshold: int = 0.05) -> dict | None | pd.DataFrame:
+def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: str = "description", threshold: float = 0.05) -> dict | None | pd.DataFrame:
     """
-    ## Variable Statistical Test of Independence
-    ### The null hypothesis is that there is no association between the two variables,
+    #### Variable Statistical Test of Independence
+    The null hypothesis is that there is no association between the two variables,
     and the alternative hypothesis is that there is a significant association between them.\n
     https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3900058/\n
     
-    :param df: Pandas DataFrame
-    :param factor_col: Column name by which to group the data
-    :param fraud_col: Column name of the fraud indicator
-    :param type: Type of output ('description' or 'table')
-    :return: None
+    Args:
+        df (pd.DataFrame): Pandas DataFrame
+        factor_col (str): Column name by which to group the data
+        fraud_col (str): Column name of the fraud indicator
+        type (str): Type of output ('description' or 'table')
+        threshold (float): Significance level for the test (default is 0.05)
+
+    Returns:
+        dict: Dictionary containing the results of the test if significant
+        None: If the test is not significant
+        pd.DataFrame: DataFrame of expected frequencies if type is 'table'
     """
     count_group = df.groupby([factor_col, fraud_col]).size().reset_index(name="n")
 
@@ -86,7 +107,7 @@ def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: s
     chi2, pval, dof, expected = stats.chi2_contingency(table)
 
     if type == "description":
-        if pval <= treshold:
+        if pval <= threshold:
             return {
                 "column": factor_col,
                 "chi2": chi2,
@@ -100,20 +121,23 @@ def chi2_independence(df: pd.DataFrame, factor_col: str, fraud_col: str, type: s
 
 def spearman_correlation(df: pd.DataFrame, column: str, target: str) -> dict | None:
     """
-    ## Spearman's rank correlation coefficient
-    ### The null hypothesis is that there is no association between the two variables,
+    #### Spearman's rank correlation coefficient
+    The null hypothesis is that there is no association between the two variables,
     and the alternative hypothesis is that there is a significant association between them.\n
     https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient\n
-    :param df: Pandas DataFrame
-    :param column: Column name to calculate the correlation for
-    :param target: Target column
-    :return: None
+    Args:
+        df (pd.DataFrame): Pandas DataFrame
+        column (str): Column name to calculate the Spearman correlation for
+        target (str): Target column
+    Returns:
+        dict: Dictionary containing the results of the test if significant
+        None: If the test is not significant
     """
     df_valid = df.dropna(subset=[column])
 
     # avoid ConstantInputWarning
     if df_valid[column].nunique() < 2 or df_valid[target].nunique() < 2:
-        return
+        return None
 
     corr, p_value = stats.spearmanr(df_valid[column], df_valid[target])
     if p_value < 0.05:
@@ -123,24 +147,28 @@ def spearman_correlation(df: pd.DataFrame, column: str, target: str) -> dict | N
             "p_value": p_value,
             "significant": True
         }
-    return
+    return None
 
 def anova_test(df: pd.DataFrame, column: str, target: str) -> dict | None:
     """
-    ## ANOVA test
-    ### The null hypothesis is that there is no association between the two variables,
+    #### ANOVA test
+    The null hypothesis is that there is no association between the two variables,
     and the alternative hypothesis is that there is a significant association between them.\n
     https://en.wikipedia.org/wiki/Analysis_of_variance\n
-    :param df: Pandas DataFrame
-    :param column: Column name to calculate the ANOVA test for
-    :param target: Target column
-    :return: None
+    Args:
+        df (pd.DataFrame): Pandas DataFrame
+        column (str): Column name to calculate the ANOVA test for
+        target (str): Target column
+    Returns:
+        dict: Dictionary containing the results of the test if significant
+        None: If the test is not significant
     """
     df_valid = df.dropna(subset=[column])
 
     groups = [group[target].values for name, group in df_valid.groupby(column)]
     if len(groups) < 2:
-        return
+        return None
+    
     f_stat, p_value = stats.f_oneway(*groups)
 
     if p_value < 0.05:
@@ -150,5 +178,5 @@ def anova_test(df: pd.DataFrame, column: str, target: str) -> dict | None:
             "p_value": p_value,
             "significant": p_value < 0.05
         }
-    return
+    return None
     
