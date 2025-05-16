@@ -173,7 +173,7 @@ def plot_stat_results(
     plt.tight_layout()
     plt.show()
 
-def plot_stat_results(model: Any, X_test, y_test) -> None:
+def plot_model_evaluation(model: Any, X_test: np.ndarray, y_test: np.ndarray) -> None:
     """
     #### Plot the results of a classification model.
     Args:
@@ -196,7 +196,7 @@ def plot_stat_results(model: Any, X_test, y_test) -> None:
     plot_roc(y_test, y_pred_prob)
     plot_confusion_matrix(y_test, y_pred)
 
-def plot_feature_importance(model: Any, feature_names) -> None:
+def plot_feature_importance(model: Any, feature_names: list) -> None:
     """
     #### Plot feature importance for a given model.
     Args:
