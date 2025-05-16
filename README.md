@@ -18,3 +18,8 @@ mkdir ~/.kaggle
 mv ~/Downloads/kaggle.json ~/.kaggle/
 chmod 600 ~/.kaggle/kaggle.json
 ```
+
+[Link do competition na Kaggle](https://www.kaggle.com/competitions/sgh-x-mastercard-hackathon-may-2025/data)
+
+Trzeba do niego dołączyć, a następnie uruchomić skrypt download-data.py. 
+Aby dane pobrały się we właściwym miejscu, naley uruchomić go wewnątrz katalogu `src/`
