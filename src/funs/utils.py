@@ -1,12 +1,9 @@
 import pandas as pd
 import scipy.stats as stats
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn.metrics import (
     f1_score, precision_score, recall_score
     )
-
 from funs.country_decoding import add_country_from_coordinates
 
 USERS_PATH = '../../data/preprocessed/users.csv'
@@ -14,6 +11,14 @@ MERCHANTS_PATH = '../../data/preprocessed/merchants.csv'
 TRANSACTIONS_PATH = '../../data/preprocessed/transactions.json'
 
 def get_merged_dataframes() -> pd.DataFrame:
+    """
+    #### Load and merge dataframes
+    This function loads the users, merchants, and transactions dataframes from CSV and JSON files,
+    respectively. It then merges them into a single dataframe and adds country information from coordinates.\n
+    The merged dataframe contains user and merchant information along with transaction details.\n
+    Returns:
+        pd.DataFrame: Merged dataframe containing user, merchant, and transaction information.
+    """
     users = pd.read_csv(USERS_PATH) 
     users['user_country'] = users['country']
     users.drop(columns=['country'], inplace=True)
@@ -36,7 +41,7 @@ def get_merged_dataframes() -> pd.DataFrame:
     return merged
 
 
-def find_best_threshold(y_true, y_pred_prob, metric='f1', step=0.01, verbose=False) -> tuple[float, float]:
+def find_best_threshold(y_true: np.ndarray, y_pred_prob: np.ndarray, metric: str='f1', step: float=0.01, verbose: bool=False) -> tuple[float, float]:
     """
     #### Find the best threshold for binary classification
     This function finds the best threshold for binary classification based on the specified metric.\n
